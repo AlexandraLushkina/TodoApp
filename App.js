@@ -1,19 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, FlatList } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from './components/Header';
 import ListItem from './components/ListItem';
 import Form from './components/Form';
 
 export default function App() {
   const [listOfItems, setListOfItems] = useState([
-    { header: 'Купить молоко', key: '1' },
-    { header: 'Купить яиц', key: '2' },
-    { header: 'Вымыть пол', key: '3' },
-    { header: 'Постирать акулу', key: '4' },
+    { header: 'Купить молоко', description: 'В пакете', key: '1' },
+    { header: 'Купить яиц', description: '10 шт', key: '2' },
+    { header: 'Вымыть пол', description: 'кухня\nспальня\nгостиная\nванная', key: '3' },
+    { header: 'Постирать акулу', description: 'Деликатный режим', key: '4' },
     { header: 'Выбросить мусор', key: '5' },
   ]);
 
-  const addHandler = (task) => {
+  useEffect(() => {
+    getItemsListFromStorage();
+  }, []);
+
+  const addHandler = async (task) => {
     if (task && task.header) {
       setListOfItems((list) => {
         return [
@@ -25,6 +30,11 @@ export default function App() {
           ...list,
         ];
       });
+      try {
+        await AsyncStorage.setItem('@listOfItems', JSON.stringify(listOfItems));
+      } catch (e) {
+        console.error('ERROR WHILE WRITING TO ASYNC STORAGE', e);
+      }
     }
   };
 
@@ -32,6 +42,16 @@ export default function App() {
     setListOfItems((list) => {
       return list.filter((e) => e.key !== key);
     });
+  };
+
+  const getItemsListFromStorage = async () => {
+    try {
+      let listFromStorage = await AsyncStorage.getItem('@listOfItems');
+      listFromStorage = listFromStorage != null ? JSON.parse(listFromStorage) : null;
+      setListOfItems(listFromStorage);
+    } catch (e) {
+      console.error('ERROR WHILE READING FROM ASYNC STORAGE', e);
+    }
   };
 
   return (

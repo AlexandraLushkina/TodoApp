@@ -25,12 +25,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginHorizontal: '5%',
-    color: '#5B6153',
+    color: '#508068',
   },
 
   description: {
     fontSize: 12,
-    marginHorizontal: '5%',
+    marginHorizontal: '9%',
+    marginTop: 5,
     color: '#9C9E93',
   },
 });
