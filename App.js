@@ -7,11 +7,11 @@ import Form from './components/Form';
 
 export default function App() {
   const [listOfItems, setListOfItems] = useState([
-    { header: 'Купить молоко', description: 'В пакете', key: '1' },
-    { header: 'Купить яиц', description: '10 шт', key: '2' },
-    { header: 'Вымыть пол', description: 'кухня\nспальня\nгостиная\nванная', key: '3' },
-    { header: 'Постирать акулу', description: 'Деликатный режим', key: '4' },
-    { header: 'Выбросить мусор', key: '5' },
+    // { header: 'Купить молоко', description: 'В пакете', key: '1' },
+    // { header: 'Купить яиц', description: '10 шт', key: '2' },
+    // { header: 'Вымыть пол', description: 'кухня\nспальня\nгостиная\nванная', key: '3' },
+    // { header: 'Постирать акулу', description: 'Деликатный режим', key: '4' },
+    // { header: 'Выбросить мусор', key: '5' },
   ]);
 
   useEffect(() => {
@@ -26,6 +26,7 @@ export default function App() {
             header: task.header,
             description: task.description,
             key: Math.random().toString(36).substring(7),
+            completed: false,
           },
           ...list,
         ];
@@ -33,15 +34,49 @@ export default function App() {
       try {
         await AsyncStorage.setItem('@listOfItems', JSON.stringify(listOfItems));
       } catch (e) {
-        console.error('ERROR WHILE WRITING TO ASYNC STORAGE', e);
+        console.error('ERROR WHILE WRITING TO ASYNC STORAGE AFTER ADDING', e);
       }
     }
   };
 
-  const deleteHandler = (key) => {
+  const deleteHandler = async (key) => {
     setListOfItems((list) => {
       return list.filter((e) => e.key !== key);
     });
+    try {
+      await AsyncStorage.setItem('@listOfItems', JSON.stringify(listOfItems));
+    } catch (e) {
+      console.error('ERROR WHILE WRITING TO ASYNC STORAGE AFTER DELETING', e);
+    }
+  };
+
+  const editHandler = async (key, header, description) => {
+    setListOfItems((list) => {
+      const editedIndex = list.findIndex((e) => e.key === key);
+      list[editedIndex].header = header;
+      list[editedIndex].description = description;
+      return list;
+    });
+    try {
+      await AsyncStorage.setItem('@listOfItems', JSON.stringify(listOfItems));
+    } catch (e) {
+      console.error('ERROR WHILE WRITING TO ASYNC STORAGE AFTER EDIT', e);
+    }
+  };
+
+  const completedHandler = async (key) => {
+    setListOfItems((list) => {
+      const completedElement = list.find((e) => e.key === key);
+      completedElement.completed = !completedElement.completed;
+      const allCompleted = list.filter((e) => e.completed);
+      const allUncompleted = list.filter((e) => !e.completed);
+      return [...allUncompleted, ...allCompleted];
+    });
+    try {
+      await AsyncStorage.setItem('@listOfItems', JSON.stringify(listOfItems));
+    } catch (e) {
+      console.error('ERROR WHILE WRITING TO ASYNC STORAGE AFTER COMPLETE', e);
+    }
   };
 
   const getItemsListFromStorage = async () => {
@@ -61,7 +96,14 @@ export default function App() {
       <View>
         <FlatList
           data={listOfItems}
-          renderItem={({ item }) => <ListItem el={item} deleteHandler={deleteHandler} />}
+          renderItem={({ item }) => (
+            <ListItem
+              el={item}
+              deleteHandler={deleteHandler}
+              editHandler={editHandler}
+              completedHandler={completedHandler}
+            />
+          )}
         />
       </View>
     </View>
